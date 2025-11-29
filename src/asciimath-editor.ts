@@ -107,7 +107,7 @@ export class AsciiMathEditor extends ce.StyledElement {
             this.input.value = initial
             this.update()
         }
-        this.input.onchange = () => this.update()
+        this.input.oninput = () => this.update()
     }
     /**
      * ## Formatting MathML

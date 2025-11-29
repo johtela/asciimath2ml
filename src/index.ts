@@ -422,8 +422,14 @@ function rightBracket(input: string, output?: string): Symbol {
  */
 function unaryParser(oper: string): Parser {
     return scanner => {
+        let [sub, sup] = subSupParser(scanner)
+        let soper =
+            sub && sup ? /*html*/`<msubsup>${oper}${sub}${sup}</msubsup>` :
+            sub ? /*html*/`<msub>${oper}${sub}</msub>` :
+            sup ? /*html*/`<msup>${oper}${sup}</msup>` :
+            oper
         let arg = sexprParser(scanner)
-        return /*html*/`<mrow>${oper}${arg}</mrow>`
+        return /*html*/`<mrow>${soper}${arg}</mrow>`
     }
 }
 /**
@@ -646,6 +652,23 @@ function sexprParser(scanner: Scanner): string {
  */
 function iexprParser(scanner: Scanner): string {
     let [res, sym] = parseSExpr(scanner)
+    let [sub, sup] = subSupParser(scanner)
+    if (sym.kind == SymbolKind.UnderOver)
+        return sub && sup ? /*html*/`<munderover>${res}${sub}${sup}</munderover>` :
+            sub ? /*html*/`<munder>${res}${sub}</munder>` :
+            sup ? /*html*/`<mover>${res}${sup}</mover>` :
+            res
+    else
+        return sub && sup ? /*html*/`<msubsup>${res}${sub}${sup}</msubsup>` :
+            sub ? /*html*/`<msub>${res}${sub}</msub>` :
+            sup ? /*html*/`<msup>${res}${sup}</msup>` :
+            res
+}
+/**
+ * Parse the subscript and superscript expressions, if they exist.
+ */
+function subSupParser(scanner: Scanner): 
+    [string | undefined, string | undefined] {
     let sub: string | undefined
     let sup: string | undefined
     let [next, pos] = scanner.peekSymbol()
@@ -658,16 +681,7 @@ function iexprParser(scanner: Scanner): string {
         scanner.pos = pos
         sup = sexprParser(scanner)
     }
-    if (sym.kind == SymbolKind.UnderOver)
-        return sub && sup ? /*html*/`<munderover>${res}${sub}${sup}</munderover>` :
-            sub ? /*html*/`<munder>${res}${sub}</munder>` :
-            sup ? /*html*/`<mover>${res}${sup}</mover>` :
-            res
-    else
-        return sub && sup ? /*html*/`<msubsup>${res}${sub}${sup}</msubsup>` :
-            sub ? /*html*/`<msub>${res}${sub}</msub>` :
-            sup ? /*html*/`<msup>${res}${sup}</msup>` :
-            res
+    return [sub, sup]
 }
 /**
  * ### Expressions
